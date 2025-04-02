@@ -136,12 +136,13 @@ void CellGraphicsItem::updatePixmap() {
 	switch(m_type) {
 		case SpecialCell:
 		case SpecialCellMistake:
-                        if(!m_values.isEmpty()) {
+            if(!m_values.isEmpty()) {
 				pic = Renderer::instance()->renderSymbolOn(pic, m_values[0].value, m_values[0].color, m_range, SymbolEdited);
 			}
 			break;
+		case SpecialCellHighlight:
 		case SpecialCellPreset:
-                        if(!m_values.isEmpty()) {
+            if(!m_values.isEmpty()) {
 				pic = Renderer::instance()->renderSymbolOn(pic, m_values[0].value, 0, m_range, SymbolPreset);
 			}
 			break;
@@ -563,10 +564,31 @@ void View2DScene::hover(int cell) {
 	m_cursorPos = cell;
 // 	qCDebug(KSudokuLog) << "hover cell" << cell << m_cells[cell];
 	QPoint pos(m_cells[cell]->pos());
+	QList<int> good_states = {CorrectValue, GivenValue};
+
+	// First unhighlight all cells from previous hover
+	for (int i = 0; i < m_cells.size(); ++i) {
+		CellInfo cellInfo = m_game.cellInfo(i);
+		if (m_cells[i]->type() == SpecialCellHighlight && good_states.contains(cellInfo.state())) {
+			m_cells[i]->setType(SpecialCellPreset);
+		}
+	}
+
+	// If the cell has a value, highlight all cells with the same value
+	if (m_selectedValue > 0) {
+		for (int i = 0; i < m_cells.size(); ++i) {
+		CellInfo cellInfo = m_game.cellInfo(i);
+			if (m_game.value(i) == m_selectedValue && good_states.contains(cellInfo.state())) {
+				m_cells[i]->setType(SpecialCellHighlight);
+			}
+		}
+	}
+
+	// Highlight groups as before
 	for (GroupGraphicsItem* item : std::as_const(m_groups)) {
 		item->setHighlight(pos, m_highlightsOn);
 	}
-	
+
 	m_cells[cell]->showCursor(m_cursor);
 }
 
@@ -679,6 +701,7 @@ void View2DScene::updateCage (int cageNumP1, bool drawLabel) {
 
 void View2DScene::selectValue(int value) {
  	m_selectedValue = value;
+	hover(m_cursorPos);
  	Q_EMIT valueSelected( value );
 }
 
@@ -773,6 +796,7 @@ void View2DScene::wheelEvent(QGraphicsSceneWheelEvent* event) {
 		if(m_selectedValue < 1)
 			m_selectedValue = m_game.order();
 	}
+	hover(m_cursorPos);
 	Q_EMIT valueSelected(m_selectedValue);
 }
 

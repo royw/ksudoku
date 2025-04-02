@@ -135,7 +135,8 @@ void Renderer::fillNameHashes() {
         QStringLiteral("cursor"),
         QStringLiteral("valuelist_item"),
         QStringLiteral("valuelist_selector"),
-    };
+        QStringLiteral("cursor"),
+    };	
     m_special3dNames = {
         QStringLiteral("cell3d"),
         QStringLiteral("cell3d_preset"),

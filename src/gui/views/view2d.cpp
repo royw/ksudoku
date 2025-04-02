@@ -574,8 +574,8 @@ void View2DScene::hover(int cell) {
 		}
 	}
 
-	// If the cell has a value, highlight all cells with the same value
-	if (m_selectedValue > 0) {
+	// If the cell has a value and highlighting same values is enabled, highlight matching cells
+	if (m_selectedValue > 0 && Settings::highlightSameValues()) {
 		for (int i = 0; i < m_cells.size(); ++i) {
 		CellInfo cellInfo = m_game.cellInfo(i);
 			if (m_game.value(i) == m_selectedValue && good_states.contains(cellInfo.state())) {
@@ -834,6 +834,15 @@ void View2D::selectValue(int value) {
 
 void View2D::settingsChanged() {
 	m_scene->setSceneSize(size());
+	m_scene->settingsChanged();
+}
+
+void View2DScene::settingsChanged() {
+	// If we have a selected value and highlighting is enabled, refresh the view
+	if (m_selectedValue > 0) {
+		// Re-trigger hover on current cell to update highlighting
+		hover(m_cursorPos);
+	}
 }
 
 }
